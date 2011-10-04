@@ -44,6 +44,8 @@ params_init = {
 	'PKunit' : 'mk',
 	'cross' : False,
 	'resultf': None,
+	'kmin' : None,
+	'kmax' : None,
 }
 prefix = 'pt_'
 
@@ -69,6 +71,8 @@ class PowerSpectrumPlot(object):
 				resultf = resultf + params['last'][1]
 
 		FKPweight = params['FKPweight']
+		kmin = params['kmin']
+		kmax = params['kmax']
 
 		#power_th = np.load('../maps/test/power_yuebin.npy')
 		#power_th[0] = power_th[0]/0.705
@@ -220,8 +224,11 @@ class PowerSpectrumPlot(object):
 		#plt.loglog()
 		plt.semilogx()
 		ymin = params['ymin']
-		#plt.ylim(ymin=ymin)	
-		plt.xlim(xmin=0.01, xmax=0.9)
+		#plt.ylim(ymin=-2.e-4, ymax=2.e-4)	
+		if (kmin==None) or (kmax==None):
+			plt.xlim(xmin=0.01, xmax=0.9)
+		else:
+			plt.xlim(xmin=kmin-0.01*kmin, xmax=kmax+0.01*kmax)
 		#plt.xlim(xmin=0.01, xmax=k.max()+0.1*k.max())
 		#plt.xlim(xmin=k.min()-0.1*k.min(), xmax=k.max()+0.1*k.max())
 		plt.title('Power Spectrum')
@@ -267,7 +274,10 @@ class PowerSpectrumPlot(object):
 		plt.semilogx()
 		ymin = ymin*1.e-6
 		#plt.ylim(ymin=ymin)	
-		plt.xlim(xmin=0.01, xmax=0.9)
+		if (kmin==None) or (kmax==None):
+			plt.xlim(xmin=0.01, xmax=0.9)
+		else:
+			plt.xlim(xmin=kmin-0.01*kmin, xmax=kmax+0.01*kmax)
 		#plt.xlim(xmin=0.01, xmax=k.max()+0.1*k.max())
 		#plt.xlim(xmin=k.min()-0.1*k.min(), xmax=k.max()+0.1*k.max())
 		#plt.xlim(xmin=k.min(), xmax=k.max())

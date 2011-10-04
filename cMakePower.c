@@ -225,9 +225,12 @@ int makepk(FFT *fft, PK *pk){
 	double kunity = 1./Ny;
 	double kunitz = 1./Nz;
 
-	double kmax = sqrt(Nx*Nx*kunitx*kunitx 
-		+Ny*Ny*kunity*kunity+Nz*Nz*kunitz*kunitz);
-	double kmin = 1.*kunitx;
+//	double kmax = sqrt(Nx*Nx*kunitx*kunitx 
+//		+Ny*Ny*kunity*kunity+Nz*Nz*kunitz*kunitz);
+//	double kmin = 1.*kunitx;
+	double kmin = pk->k[0];
+	double kmax = pk->k[pk->N-1];
+	printf("%lg %lg\n", kmin, kmax);
 	double dk = pow(10, log10(kmax/kmin)/pk->N);
 	#ifdef Linearkbin
 		printf("\t::Using Linear k bin\n");
@@ -258,185 +261,201 @@ int makepk(FFT *fft, PK *pk){
 		if(x<0.5*Nx && y<0.5*Ny && z<0.5*Nz){
 			result0 = sqrt(x*x*kunitx*kunitx
 				+y*y*kunity*kunity+z*z*kunitz*kunitz);
-			idx = (int)(log10(result0/kmin)/log10(dk));
-			#ifdef Linearkbin
-				idx = (int)((result0-kmin)/dk);
-			#endif
-			pk->val[idx] = pk->val[idx] + result1;
-			kn[idx] = kn[idx] + 1.;
-			result0 = fabs(x*kunitx);
-			if(result0!=0){
-				idxp = (int)(log10(result0/kmin)/log10(dkp));
-				result0 = sqrt(y*y*kunity*kunity+z*z*kunitz*kunitz);
-				if(result0!=0){
-					idxv = (int)(log10(result0/kmin)/log10(dkv));
-					pk->val2[idxp*pk->Nv+idxv] = 
-						pk->val2[idxp*pk->Nv+idxv] + result1;
-					kn2[idxp][idxv] = kn2[idxp][idxv] + 1.;
-					//printf("%d %d \t", idxp, idxv);
-				}
+			if((result0>=kmin)&&(result0<kmax)){
+				idx = (int)(log10(result0/kmin)/log10(dk));
+				#ifdef Linearkbin
+					idx = (int)((result0-kmin)/dk);
+				#endif
+				pk->val[idx] = pk->val[idx] + result1;
+				kn[idx] = kn[idx] + 1.;
+//				result0 = fabs(x*kunitx);
+//				if(result0!=0){
+//					idxp = (int)(log10(result0/kmin)/log10(dkp));
+//					result0 = sqrt(y*y*kunity*kunity+z*z*kunitz*kunitz);
+//					if(result0!=0){
+//						idxv = (int)(log10(result0/kmin)/log10(dkv));
+//						pk->val2[idxp*pk->Nv+idxv] = 
+//							pk->val2[idxp*pk->Nv+idxv] + result1;
+//						kn2[idxp][idxv] = kn2[idxp][idxv] + 1.;
+//						//printf("%d %d \t", idxp, idxv);
+//					}
+//				}
 			}
 		}
 
 		if(x<0.5*Nx && y>0.5*Ny && z<0.5*Nz){
 			result0 = sqrt(x*x*kunitx*kunitx
 				+(y-Ny)*(y-Ny)*kunity*kunity+z*z*kunitz*kunitz);
-			idx = (int)(log10(result0/kmin)/log10(dk));
-			#ifdef Linearkbin
-				idx = (int)((result0-kmin)/dk);
-			#endif
-			pk->val[idx] = pk->val[idx] + result1;
-			kn[idx] = kn[idx] + 1.;
-			result0 = fabs(x*kunitx);
-			if(result0!=0){
-				idxp = (int)(log10(result0/kmin)/log10(dkp));
-				result0 = sqrt((y-Ny)*(y-Ny)*kunity*kunity+z*z*kunitz*kunitz);
-				if(result0!=0){
-					idxv = (int)(log10(result0/kmin)/log10(dkv));
-					pk->val2[idxp*pk->Nv+idxv] = 
-						pk->val2[idxp*pk->Nv+idxv] + result1;
-					kn2[idxp][idxv] = kn2[idxp][idxv] + 1.;
-				}
+			if((result0>=kmin)&&(result0<kmax)){
+				idx = (int)(log10(result0/kmin)/log10(dk));
+				#ifdef Linearkbin
+					idx = (int)((result0-kmin)/dk);
+				#endif
+				pk->val[idx] = pk->val[idx] + result1;
+				kn[idx] = kn[idx] + 1.;
+//				result0 = fabs(x*kunitx);
+//				if(result0!=0){
+//					idxp = (int)(log10(result0/kmin)/log10(dkp));
+//					result0 = sqrt((y-Ny)*(y-Ny)*kunity*kunity+z*z*kunitz*kunitz);
+//					if(result0!=0){
+//						idxv = (int)(log10(result0/kmin)/log10(dkv));
+//						pk->val2[idxp*pk->Nv+idxv] = 
+//							pk->val2[idxp*pk->Nv+idxv] + result1;
+//						kn2[idxp][idxv] = kn2[idxp][idxv] + 1.;
+//					}
+//				}
 			}
 		}
 
 		if(x>0.5*Nx && y<0.5*Ny && z<0.5*Nz){
 			result0 = sqrt((x-Nx)*(x-Nx)*kunitx*kunitx
 				+y*y*kunity*kunity+z*z*kunitz*kunitz);
-			idx = (int)(log10(result0/kmin)/log10(dk));
-			#ifdef Linearkbin
-				idx = (int)((result0-kmin)/dk);
-			#endif
-			pk->val[idx] = pk->val[idx] + result1;
-			kn[idx] = kn[idx] + 1.;
-//			result0 = fabs(x-Nx);
-//			if(result0!=0){
-//				idxp = (int)(log10(result0/kmin)/log10(dkp));
-//				result0 = sqrt(y*y+z*z);
+			if((result0>=kmin)&&(result0<kmax)){
+				idx = (int)(log10(result0/kmin)/log10(dk));
+				#ifdef Linearkbin
+					idx = (int)((result0-kmin)/dk);
+				#endif
+				pk->val[idx] = pk->val[idx] + result1;
+				kn[idx] = kn[idx] + 1.;
+//				result0 = fabs(x-Nx);
 //				if(result0!=0){
-//					idxv = (int)(log10(result0/kmin)/log10(dkv));
-//					pk->val2[idxp*pk->Nv+idxv] = pk->val2[idxp*pk->Nv+idxv] + result1;
-//					kn2[idxp][idxv] = kn2[idxp][idxv] + 1.;
+//					idxp = (int)(log10(result0/kmin)/log10(dkp));
+//					result0 = sqrt(y*y+z*z);
+//					if(result0!=0){
+//						idxv = (int)(log10(result0/kmin)/log10(dkv));
+//						pk->val2[idxp*pk->Nv+idxv] = pk->val2[idxp*pk->Nv+idxv] + result1;
+//						kn2[idxp][idxv] = kn2[idxp][idxv] + 1.;
+//					}
 //				}
-//			}
+			}
 		}
 
 		if(x>0.5*Nx && y>0.5*Ny && z<0.5*Nz){
 			result0 = sqrt((x-Nx)*(x-Nx)*kunitx*kunitx
 				+(y-Ny)*(y-Ny)*kunity*kunity+z*z*kunitz*kunitz);
-			idx = (int)(log10(result0/kmin)/log10(dk));
-			#ifdef Linearkbin
-				idx = (int)((result0-kmin)/dk);
-			#endif
-			pk->val[idx] = pk->val[idx] + result1;
-			kn[idx] = kn[idx] + 1.;
-//			result0 = fabs(x-Nx);
-//			if(result0!=0){
-//				idxp = (int)(log10(result0/kmin)/log10(dkp));
-//				result0 = sqrt((y-Ny)*(y-Ny)+z*z);
+			if((result0>=kmin)&&(result0<kmax)){
+				idx = (int)(log10(result0/kmin)/log10(dk));
+				#ifdef Linearkbin
+					idx = (int)((result0-kmin)/dk);
+				#endif
+				pk->val[idx] = pk->val[idx] + result1;
+				kn[idx] = kn[idx] + 1.;
+//				result0 = fabs(x-Nx);
 //				if(result0!=0){
-//					idxv = (int)(log10(result0/kmin)/log10(dkv));
-//					pk->val2[idxp*pk->Nv+idxv] = pk->val2[idxp*pk->Nv+idxv] + result1;
-//					kn2[idxp][idxv] = kn2[idxp][idxv] + 1.;
+//					idxp = (int)(log10(result0/kmin)/log10(dkp));
+//					result0 = sqrt((y-Ny)*(y-Ny)+z*z);
+//					if(result0!=0){
+//						idxv = (int)(log10(result0/kmin)/log10(dkv));
+//						pk->val2[idxp*pk->Nv+idxv] = pk->val2[idxp*pk->Nv+idxv] + result1;
+//						kn2[idxp][idxv] = kn2[idxp][idxv] + 1.;
+//					}
 //				}
-//			}
+			}
 		}
 
 		if(x<0.5*Nx && y<0.5*Ny && z>0.5*Nz){
 			result0 = sqrt(x*x*kunitx*kunitx
 				+y*y*kunity*kunity+(z-Nz)*(z-Nz)*kunitz*kunitz);
-			idx = (int)(log10(result0/kmin)/log10(dk));
-			#ifdef Linearkbin
-				idx = (int)((result0-kmin)/dk);
-			#endif
-			pk->val[idx] = pk->val[idx] + result1;
-			kn[idx] = kn[idx] + 1.;
-			result0 = fabs(x*kunitx);
-			if(result0!=0){
-				idxp = (int)(log10(result0/kmin)/log10(dkp));
-				result0 = sqrt(y*y*kunity*kunity+(z-Nz)*(z-Nz)*kunitz*kunitz);
-				if(result0!=0){
-					idxv = (int)(log10(result0/kmin)/log10(dkv));
-					pk->val2[idxp*pk->Nv+idxv] = 
-						pk->val2[idxp*pk->Nv+idxv] + result1;
-					kn2[idxp][idxv] = kn2[idxp][idxv] + 1.;
-				}
+			if((result0>=kmin)&&(result0<kmax)){
+				idx = (int)(log10(result0/kmin)/log10(dk));
+				#ifdef Linearkbin
+					idx = (int)((result0-kmin)/dk);
+				#endif
+				pk->val[idx] = pk->val[idx] + result1;
+				kn[idx] = kn[idx] + 1.;
+//				result0 = fabs(x*kunitx);
+//				if(result0!=0){
+//					idxp = (int)(log10(result0/kmin)/log10(dkp));
+//					result0 = sqrt(y*y*kunity*kunity+(z-Nz)*(z-Nz)*kunitz*kunitz);
+//					if(result0!=0){
+//						idxv = (int)(log10(result0/kmin)/log10(dkv));
+//						pk->val2[idxp*pk->Nv+idxv] = 
+//							pk->val2[idxp*pk->Nv+idxv] + result1;
+//						kn2[idxp][idxv] = kn2[idxp][idxv] + 1.;
+//					}
+//				}
 			}
 		}
 
 		if(x<0.5*Nx && y>0.5*Ny && z>0.5*Nz){
 			result0 = sqrt(x*x*kunitx*kunitx+
 				(y-Ny)*(y-Ny)*kunity*kunity+(z-Nz)*(z-Nz)*kunitz*kunitz);
-			idx = (int)(log10(result0/kmin)/log10(dk));
-			#ifdef Linearkbin
-				idx = (int)((result0-kmin)/dk);
-			#endif
-			pk->val[idx] = pk->val[idx] + result1;
-			kn[idx] = kn[idx] + 1.;
-			result0 = fabs(x*kunitx);
-			if(result0!=0){
-				idxp = (int)(log10(result0/kmin)/log10(dkp));
-				result0 = 
-					sqrt((y-Ny)*(y-Ny)*kunity*kunity+(z-Nz)*(z-Nz)*kunitz*kunitz);
-				if(result0!=0){
-					idxv = (int)(log10(result0/kmin)/log10(dkv));
-					pk->val2[idxp*pk->Nv+idxv] =
-						pk->val2[idxp*pk->Nv+idxv] + result1;
-					kn2[idxp][idxv] = kn2[idxp][idxv] + 1.;
-				}
+			if((result0>=kmin)&&(result0<kmax)){
+				idx = (int)(log10(result0/kmin)/log10(dk));
+				#ifdef Linearkbin
+					idx = (int)((result0-kmin)/dk);
+				#endif
+				pk->val[idx] = pk->val[idx] + result1;
+				kn[idx] = kn[idx] + 1.;
+//				result0 = fabs(x*kunitx);
+//				if(result0!=0){
+//					idxp = (int)(log10(result0/kmin)/log10(dkp));
+//					result0 = 
+//						sqrt((y-Ny)*(y-Ny)*kunity*kunity+(z-Nz)*(z-Nz)*kunitz*kunitz);
+//					if(result0!=0){
+//						idxv = (int)(log10(result0/kmin)/log10(dkv));
+//						pk->val2[idxp*pk->Nv+idxv] =
+//							pk->val2[idxp*pk->Nv+idxv] + result1;
+//						kn2[idxp][idxv] = kn2[idxp][idxv] + 1.;
+//					}
+//				}
 			}
 		}
 
 		if(x>0.5*Nx && y<0.5*Ny && z>0.5*Nz){
 			result0 = sqrt((x-Nx)*(x-Nx)*kunitx*kunitx+
 				y*y*kunity*kunity+(z-Nz)*(z-Nz)*kunitz*kunitz);
-			idx = (int)(log10(result0/kmin)/log10(dk));
-			#ifdef Linearkbin
-				idx = (int)((result0-kmin)/dk);
-			#endif
-			pk->val[idx] = pk->val[idx] + result1;
-			kn[idx] = kn[idx] + 1.;
-//			result0 = fabs(x-Nx);
-//			if(result0!=0){
-//				idxp = (int)(log10(result0/kmin)/log10(dkp));
-//				result0 = sqrt(y*y+(z-Nz)*(z-Nz));
+			if((result0>=kmin)&&(result0<kmax)){
+				idx = (int)(log10(result0/kmin)/log10(dk));
+				#ifdef Linearkbin
+					idx = (int)((result0-kmin)/dk);
+				#endif
+				pk->val[idx] = pk->val[idx] + result1;
+				kn[idx] = kn[idx] + 1.;
+//				result0 = fabs(x-Nx);
 //				if(result0!=0){
-//					idxv = (int)(log10(result0/kmin)/log10(dkv));
-//					pk->val2[idxp*pk->Nv+idxv] = pk->val2[idxp*pk->Nv+idxv] + result1;
-//					kn2[idxp][idxv] = kn2[idxp][idxv] + 1.;
+//					idxp = (int)(log10(result0/kmin)/log10(dkp));
+//					result0 = sqrt(y*y+(z-Nz)*(z-Nz));
+//					if(result0!=0){
+//						idxv = (int)(log10(result0/kmin)/log10(dkv));
+//						pk->val2[idxp*pk->Nv+idxv] = pk->val2[idxp*pk->Nv+idxv] + result1;
+//						kn2[idxp][idxv] = kn2[idxp][idxv] + 1.;
+//					}
 //				}
-//			}
+			}
 		}
 
 		if(x>0.5*Nx && y>0.5*Ny && z>0.5*Nz){
 			result0 = sqrt((x-Nx)*(x-Nx)*kunitx*kunitx+
 				(y-Ny)*(y-Ny)*kunity*kunity+(z-Nz)*(z-Nz)*kunitz*kunitz);
-			idx = (int)(log10(result0/kmin)/log10(dk));
-			#ifdef Linearkbin
-				idx = (int)((result0-kmin)/dk);
-			#endif
-			pk->val[idx] = pk->val[idx] + result1;
-			kn[idx] = kn[idx] + 1.;
-//			result0 = fabs(x-Nx);
-//			if(result0!=0){
-//				idxp = (int)(log10(result0/kmin)/log10(dkp));
-//				result0 = sqrt((y-Ny)*(y-Ny)+(z-Nz)*(z-Nz));
+			if((result0>=kmin)&&(result0<kmax)){
+				idx = (int)(log10(result0/kmin)/log10(dk));
+				#ifdef Linearkbin
+					idx = (int)((result0-kmin)/dk);
+				#endif
+				pk->val[idx] = pk->val[idx] + result1;
+				kn[idx] = kn[idx] + 1.;
+//				result0 = fabs(x-Nx);
 //				if(result0!=0){
-//					idxv = (int)(log10(result0/kmin)/log10(dkv));
-//					pk->val2[idxp*pk->Nv+idxv] = pk->val2[idxp*pk->Nv+idxv] + result1;
-//					kn2[idxp][idxv] = kn2[idxp][idxv] + 1.;
+//					idxp = (int)(log10(result0/kmin)/log10(dkp));
+//					result0 = sqrt((y-Ny)*(y-Ny)+(z-Nz)*(z-Nz));
+//					if(result0!=0){
+//						idxv = (int)(log10(result0/kmin)/log10(dkv));
+//						pk->val2[idxp*pk->Nv+idxv] = pk->val2[idxp*pk->Nv+idxv] + result1;
+//						kn2[idxp][idxv] = kn2[idxp][idxv] + 1.;
+//					}
 //				}
-//			}
+			}
 		}
 	}
 
 	for(int i=0; i<pk->N; i++){
 		if(kn[i]!=0) 
 			pk->val[i] /= kn[i];
-		pk->k[i] = kmin*pow(dk, i);
-		#ifdef Linearkbin
-			pk->k[i] = kmin+dk*i;
-		#endif
+//		pk->k[i] = kmin*pow(dk, i);
+//		#ifdef Linearkbin
+//			pk->k[i] = kmin+dk*i;
+//		#endif
 	}
 	for(int i=0; i<pk->Np; i++){
 		pk->k2[i] = kmin*pow(dkv, i);

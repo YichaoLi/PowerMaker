@@ -15,6 +15,7 @@ from sys import *
 import MakePower
 import matplotlib.pyplot as plt
 import fftw3 as FFTW
+from scipy.interpolate import interp1d
 
 #dirty_map = algebra.load("15hr_41_dirty_map_I.npy")
 #dirty_map = algebra.make_vect(dirty_map)
@@ -44,6 +45,11 @@ params_init = {
 	'PKunit' : 'mk',
 	'cross' : False,
 	'resultf': None,
+	'kmin' : None,
+	'kmax' : None,
+	'biascal' : False,
+	'biascaldir_k' : '',
+	'biascaldir_b' : '',
 }
 prefix = 'pt_'
 
@@ -69,6 +75,8 @@ class PowerSpectrumPlot(object):
 				resultf = resultf + params['last'][1]
 
 		FKPweight = params['FKPweight']
+		kmin = params['kmin']
+		kmax = params['kmax']
 
 		#power_th = np.load('../maps/test/power_yuebin.npy')
 		#power_th[0] = power_th[0]/0.705
@@ -82,7 +90,36 @@ class PowerSpectrumPlot(object):
 		else:
 			k = sp.load(params['input_root'] + 'k_combined_'+resultf+'.npy')
 			PK = sp.load(params['input_root'] + 'PK_combined_'+resultf+'.npy')
-			
+
+		# Calibrate the bias
+		if params['biascal']:
+			biask = sp.load(params['biascaldir_k'])
+			bias = sp.load(params['biascaldir_b'])
+			B = interp1d(biask, bias, kind='cubic')
+			non0 = PK.nonzero()
+			k_biascal = k.take(non0)[0]
+			print bias
+			biascal = B(k_biascal)
+			print biascal
+			PK_biascal = PK.take(non0)[0] * biascal
+			PK_biascal[PK_biascal<0]=0
+			non0 = PK_biascal.nonzero()
+			PK_biascal = PK_biascal.take(non0)[0]
+			k_biascal = k_biascal.take(non0)[0]
+			Averageplot = True
+			try:
+				PKvar = sp.load(params['input_root'] + 
+					'PKvar_combined_'+resultf+'.npy')
+				PKerr_average_biascal = np.ndarray(shape=(2,len(non0[0])))
+				PKerr_average_biascal[0] = PKvar.copy()[PK>0]
+				PKerr_average_biascal[1] = PKvar.copy()[PK>0]
+
+				for i in range(len(PKerr_average_biascal[0])):
+					if PKerr_average_biascal[0][i] >=PK_biascal[i]:
+						PKerr_average_biascal[0][i] = PK_biascal[i]-1.e-10
+			except IOError:
+				print '\t::No Average Error!!'
+				Averageplot = False
 		#PK_ = sp.load(params['input_root'] + 'PK_noise.npy')
 		#print PK
 		#print PK_
@@ -107,6 +144,7 @@ class PowerSpectrumPlot(object):
 
 		PK = PK.take(non0)[0]
 		k = k.take(non0)[0]
+
 
 		# import the jk error
 		#PKjk = sp.load(params['input_root'] + 'PKjk_'+resultf+'.npy')
@@ -221,6 +259,12 @@ class PowerSpectrumPlot(object):
 		elif Averageplot:
 			plt.errorbar(k, PK, PKerr_average, fmt='o', c='r',
 				label='Noise Inv Weight', capsize=4.5, elinewidth=1)
+			if params['biascal']:
+				print PK_biascal
+				plt.errorbar(k_biascal, PK_biascal, PKerr_average_biascal,
+					fmt='o', c='g',
+					label='Noise Inv Weight(Bias calibrated)', 
+					capsize=4.5, elinewidth=1)
 		else:
 			plt.scatter(k, PK, c='b', label='Noise Inv Weight')
 		if FKPweight:
@@ -232,7 +276,11 @@ class PowerSpectrumPlot(object):
 		#plt.semilogx()
 		ymin = params['ymin']
 		plt.ylim(ymin=ymin)	
-		plt.xlim(xmin=0.01, xmax=0.9)
+		if (kmin==None) or (kmax==None):
+			plt.xlim(xmin=0.01, xmax=0.9)
+		else:
+			plt.xlim(xmin=kmin-0.01*kmin, xmax=kmax+0.01*kmax)
+
 		#plt.xlim(xmin=0.01, xmax=k.max()+0.1*k.max())
 		#plt.xlim(xmin=k.min()-0.1*k.min(), xmax=k.max()+0.1*k.max())
 		plt.title('Power Spectrum')
@@ -252,6 +300,10 @@ class PowerSpectrumPlot(object):
 		if FKPweight:
 			PKfkp = PKfkp*kfkp*kfkp*kfkp/2./pi/pi
 			PKerrfkp = PKerrfkp*kfkp*kfkp*kfkp/2./pi/pi
+		if params['biascal']:
+			PK_biascal = PK_biascal*k_biascal*k_biascal*k_biascal/2./pi/pi
+			PKerr_average_biascal = \
+				PKerr_average_biascal*k_biascal*k_biascal*k_biascal/2./pi/pi
 		PKcamb[1] = PKcamb[1]*PKcamb[0]*PKcamb[0]*PKcamb[0]/2./pi/pi
 		#PKnonl = PKnonl*PKnonl_k**3/2./pi/pi
 		#power_th[1] = power_th[1]*power_th[0]*power_th[0]*power_th[0]/2/pi/pi
@@ -269,6 +321,11 @@ class PowerSpectrumPlot(object):
 		elif Averageplot:
 			plt.errorbar(k, PK, PKerr_average, fmt='o', c='r',
 				label='Noise Inv Weight', capsize=4.5, elinewidth=1)
+			if params['biascal']:
+				plt.errorbar(k_biascal, PK_biascal, PKerr_average_biascal,
+					fmt='o', c='g',
+					label='Noise Inv Weight(Bias calibrated)', 
+					capsize=4.5, elinewidth=1)
 		else:
 			plt.scatter(k, PK, c='b', label='Noise Inv Weight')
 		if FKPweight:
@@ -278,7 +335,11 @@ class PowerSpectrumPlot(object):
 		#plt.semilogx()
 		ymin = ymin*1.e-6
 		plt.ylim(ymin=ymin)	
-		plt.xlim(xmin=0.01, xmax=0.9)
+		if (kmin==None) or (kmax==None):
+			plt.xlim(xmin=0.01, xmax=0.9)
+		else:
+			plt.xlim(xmin=kmin-0.01*kmin, xmax=kmax+0.01*kmax)
+		#plt.xlim(xmin=0.01, xmax=0.9)
 		#plt.xlim(xmin=0.01, xmax=k.max()+0.1*k.max())
 		#plt.xlim(xmin=k.min()-0.1*k.min(), xmax=k.max()+0.1*k.max())
 		#plt.xlim(xmin=k.min(), xmax=k.max())

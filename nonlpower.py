@@ -135,10 +135,10 @@ class TheoryPowerSpectrumMaker(object):
 		print x.min(), x.max()
 		ki = np.logspace(log10(0.01), log10(1.5), num=300)
 
-		A0 = 1.
 		A1 = 1.
-		A2 = 1.8
-		A0 = np.array([A0, A1, A2])
+		A2 = 1.
+		A3 = 1.8
+		A0 = np.array([A1, A2, A3])
 		A, status = leastsq(chisq, A0, args=(y, x, err), maxfev=20000)
 
 		window = windowfunction(PKcamb[0], A)

@@ -35,6 +35,8 @@ params_init = {
 	'Zrange' : (0.,6*15),
 
 	'kbinNum' : 20,
+	'kmin' : None,
+	'kmax' : None,
 
 	'FKPweight' : False,
 	'FKPpk' : 1.e-3,
@@ -81,12 +83,21 @@ class PowerSpectrumMaker(object):
 
 
 		kbn = params['kbinNum']
+		kmin = params['kmin']
+		kmax = params['kmax']
+
+		kunit = 2.*pi/(params['boxunit'])
 		PK = np.zeros(kbn)
-		k = np.zeros(kbn)
+		if (kmin==None) or (kmax==None):
+			k = np.logspace(
+				log10(1./params['boxshape'][0]), log10(sqrt(3)), num=kbn+1)
+		else:
+			kmin = kmin/kunit
+			kmax = kmax/kunit
+			k = np.logspace(log10(kmin), log10(kmax), num=kbn+1)
 		PK2 = np.zeros(shape=(10, 10))
 		k2 = np.zeros(shape=(2, 10))
 		MakePower.Make(fftbox, PK, k, PK2, k2)
-		kunit = 2.*pi/(params['boxunit'])
 		k = k*kunit
 		k2 = k2*kunit
 		boxN = params['boxshape'][0]*params['boxshape'][1]*params['boxshape'][2]

@@ -50,13 +50,15 @@ params_init = {
 	'Yrange' : (-64*15,64*15),
 	'Zrange' : (0.,128*15),
 	'kbinNum' : 20,
+	'kmin' : None,
+	'kmax' : None,
 
 	'FKPweight' : False,
 }
 prefix = 'pkc_'
 
 class PowerSpectrumMaker(object):
-	"""Calculate The JackKnifeErrot for Power Spectrum"""
+	"""Calculate The Power Spectrum"""
 
 	def __init__(self, parameter_file_or_dict=None, feedback=1):
 		# Read in the parameters.
@@ -93,6 +95,8 @@ class PowerSpectrumMaker(object):
 		n_map = len(params['hrlist'])
 
 		kbn = params['kbinNum']
+		kmin = params['kmin']
+		kmax = params['kmax']
 		PK = np.zeros(shape=(n_map,kbn))
 
 		self.q = mp.JoinableQueue()
@@ -131,8 +135,14 @@ class PowerSpectrumMaker(object):
 		print PKmean
 		print PKvar
 
-		k = np.logspace(
-			log10(1./params['boxshape'][0]), log10(sqrt(3)), num=kbn+1)
+		kunit = 2.*pi/(params['boxunit'])
+		if (kmin==None) or (kmax==None):
+			k = np.logspace(
+				log10(1./params['boxshape'][0]), log10(sqrt(3)), num=kbn+1)
+		else:
+			kmin = kmin/kunit
+			kmax = kmax/kunit
+			k = np.logspace(log10(kmin), log10(kmax), num=kbn+1)
 		k = k*2.*pi/params['boxunit']
 		k = k[:-1]
 		sp.save(params['output_root']+\
